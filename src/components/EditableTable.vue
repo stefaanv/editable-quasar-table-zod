@@ -4,10 +4,8 @@
     <template v-slot:body="props">
       <q-tr :props="props">
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
-          {{ getRowValue(props.row, col.name) }}
-          <template
-            v-if="col.isString && editable && editableColumns && editableColumns.includes(col.name)"
-          >
+          {{ props.row[col.name] }}
+          <template v-if="col.isString && editable && editableColumns?.includes(col.name)">
             <q-popup-edit v-model="props.row[col.name]">
               <q-input v-model="props.row[col.name]" autofocus dense />
             </q-popup-edit>
@@ -51,33 +49,22 @@ const props = withDefaults(
   },
 )
 
-function getRowValue(row: Record<string, unknown>, key: string) {
-  return row[key]
-}
+const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 
-function getColumnLabel(
-  labels: Partial<Record<RowKey, string>> | undefined,
-  key: string,
-): string | undefined {
-  return labels && (labels as Record<string, string>)[key]
-}
+const getColumnLabel = (key: string) =>
+  (props.columnLabels as Record<string, string> | undefined)?.[key]
 
 const columns = computed<QTableColumn[]>(() =>
-  Object.keys(props.rowModel.shape).map((key) => {
-    const isString = props.rowModel.shape[key] instanceof z.ZodString
-    const colLabel = getColumnLabel(props.columnLabels, key)
-    const label = colLabel ?? key.charAt(0).toUpperCase() + key.slice(1)
-    return {
-      name: key,
-      label,
-      field: key,
-      align: 'left',
-      sortable: true,
-      headerClasses: props.headerClass,
-      headerStyle: props.headerStyle,
-      isString,
-    }
-  }),
+  Object.keys(props.rowModel.shape).map((key) => ({
+    name: key,
+    label: getColumnLabel(key) ?? capitalize(key),
+    field: key,
+    align: 'left' as const,
+    sortable: true,
+    headerClasses: props.headerClass,
+    headerStyle: props.headerStyle,
+    isString: props.rowModel.shape[key] instanceof z.ZodString,
+  })),
 )
 </script>
 
