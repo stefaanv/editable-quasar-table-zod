@@ -23,24 +23,28 @@ import z from 'zod'
 import { computed } from 'vue'
 import type { QTableColumn } from 'quasar'
 
+type RowModel = z.ZodObject<T>
+type Row = z.infer<RowModel>
+type RowKey = keyof Row
+
 defineOptions({
   inheritAttrs: false,
 })
 
 const props = withDefaults(
   defineProps<{
-    columnLabels?: Partial<Record<keyof z.infer<z.ZodObject<T>>, string>>
+    columnLabels?: Partial<Record<RowKey, string>>
     rowKey: string
-    rowModel: z.ZodObject<T>
-    data?: z.infer<z.ZodObject<T>>[]
+    rowModel: RowModel
+    data?: Row[]
     headerClass?: string
     headerStyle?: string
     editable: boolean
-    editableColumns?: Array<keyof z.infer<z.ZodObject<T>>>
-    createNewRowFn: () => z.infer<z.ZodObject<T>>
+    editableColumns?: Array<RowKey>
+    createNewRowFn: () => Row
   }>(),
   {
-    rowModel: () => z.object({}) as z.ZodObject<T>,
+    rowModel: () => z.object({}) as RowModel,
     data: () => [],
     headerClass: '',
     headerStyle: '',
@@ -52,7 +56,7 @@ function getRowValue(row: Record<string, unknown>, key: string) {
 }
 
 function getColumnLabel(
-  labels: Partial<Record<keyof z.infer<z.ZodObject<T>>, string>> | undefined,
+  labels: Partial<Record<RowKey, string>> | undefined,
   key: string,
 ): string | undefined {
   return labels && (labels as Record<string, string>)[key]
