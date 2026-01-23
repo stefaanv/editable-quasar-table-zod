@@ -66,9 +66,10 @@ const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 const getColumnLabel = (key: string) =>
   (props.columnLabels as Record<string, string> | undefined)?.[key]
 
-const handleSave = (row: Row, colName: RowKey, newValue: unknown) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ;(row as any)[colName] = newValue
+const handleSave = (row: Row, colName: RowKey, newValue: string) => {
+  // TypeScript can't narrow generic indexed types, so we need to suppress this
+  // @ts-expect-error - runtime check ensures type safety
+  row[colName] = newValue
   props.updateRow?.(row)
 }
 
