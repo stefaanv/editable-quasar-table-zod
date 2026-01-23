@@ -3,7 +3,7 @@
     <editable-table
       row-key="id"
       :row-model="NetworkVariableSchema"
-      :data="store.$state"
+      :data="store.data"
       flat
       bordered
       header-class="text-h6 bg-blue text-white"
@@ -13,6 +13,7 @@
       :hide-columns="['id']"
       :create-new-row-fn="() => createNetworkVariable('garage')"
       :column-labels="{ description: 'Omschrijving' }"
+      :update-row="store.updateRow"
     />
   </q-page>
 </template>

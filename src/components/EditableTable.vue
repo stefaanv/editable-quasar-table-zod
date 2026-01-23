@@ -6,7 +6,11 @@
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           {{ props.row[col.name] }}
           <template v-if="col.isString && editable && editableColumns?.includes(col.name)">
-            <q-popup-edit v-model="props.row[col.name]" v-slot="scope">
+            <q-popup-edit
+              v-model="props.row[col.name]"
+              v-slot="scope"
+              @save="(newValue) => handleSave(props.row, col.name, newValue)"
+            >
               <q-input
                 v-model="scope.value"
                 autofocus
@@ -47,6 +51,7 @@ const props = withDefaults(
     editableColumns?: Array<RowKey>
     hideColumns?: Array<RowKey>
     createNewRowFn: () => Row
+    updateRow?: (row: Row) => void
   }>(),
   {
     rowModel: () => z.object({}) as RowModel,
@@ -60,6 +65,12 @@ const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 
 const getColumnLabel = (key: string) =>
   (props.columnLabels as Record<string, string> | undefined)?.[key]
+
+const handleSave = (row: Row, colName: RowKey, newValue: unknown) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(row as any)[colName] = newValue
+  props.updateRow?.(row)
+}
 
 const columns = computed<QTableColumn[]>(() =>
   Object.keys(props.rowModel.shape)
