@@ -6,8 +6,14 @@
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           {{ props.row[col.name] }}
           <template v-if="col.isString && editable && editableColumns?.includes(col.name)">
-            <q-popup-edit v-model="props.row[col.name]">
-              <q-input v-model="props.row[col.name]" autofocus dense />
+            <q-popup-edit v-model="props.row[col.name]" v-slot="scope">
+              <q-input
+                v-model="scope.value"
+                autofocus
+                dense
+                @keyup.enter="scope.set"
+                @keyup.esc="scope.cancel"
+              />
             </q-popup-edit>
           </template>
         </q-td>
