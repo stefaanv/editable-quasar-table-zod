@@ -1,6 +1,6 @@
 <template>
   <p>{{ props.data[0] }}</p>
-  <q-table :columns="columns" :rows="props.data" row-key="id" v-bind="$attrs">
+  <q-table :columns="columns" :rows="props.data" :row-key="props.rowKey" v-bind="$attrs">
     <template v-slot:body="props">
       <q-tr :props="props">
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
@@ -22,10 +22,14 @@ defineOptions({
 
 const props = withDefaults(
   defineProps<{
+    rowKey: keyof z.infer<z.ZodObject<T>>
     rowModel: z.ZodObject<T>
     data?: z.infer<z.ZodObject<T>>[]
     headerClass?: string
     headerStyle?: string
+    editable: boolean
+    editableColumns?: Array<keyof z.infer<z.ZodObject<T>>>
+    createNewRowFn: () => z.infer<z.ZodObject<T>>
   }>(),
   {
     rowModel: () => z.object({}) as z.ZodObject<T>,
@@ -46,10 +50,6 @@ const columns = computed<QTableColumn[]>(() =>
     headerStyle: props.headerStyle,
   })),
 )
-/*
-An editable table component built with Vue 3, TypeScript, Zod, and Quasar Framework. It dynamically generates table columns based on a provided Zod schema and displays data accordingly. The component supports customization of header and title styles through props.
-Title formatting through title-class and title-style props is NOT supported !!
-*/
 </script>
 
 <style scoped></style>
