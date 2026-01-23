@@ -5,6 +5,13 @@
       <q-tr :props="props">
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           {{ props.row[col.name] }}
+          <template
+            v-if="col.isString && editable && editableColumns && editableColumns.includes(col.name)"
+          >
+            <q-popup-edit v-model="props.row[col.name]">
+              <q-input v-model="props.row[col.name]" autofocus dense />
+            </q-popup-edit>
+          </template>
         </q-td>
       </q-tr>
     </template>
@@ -22,7 +29,7 @@ defineOptions({
 
 const props = withDefaults(
   defineProps<{
-    rowKey: keyof z.infer<z.ZodObject<T>>
+    rowKey: string
     rowModel: z.ZodObject<T>
     data?: z.infer<z.ZodObject<T>>[]
     headerClass?: string
@@ -40,15 +47,19 @@ const props = withDefaults(
 )
 
 const columns = computed<QTableColumn[]>(() =>
-  Object.keys(props.rowModel.shape).map((key) => ({
-    name: key,
-    label: key.charAt(0).toUpperCase() + key.slice(1),
-    field: key,
-    align: 'left',
-    sortable: true,
-    headerClasses: props.headerClass,
-    headerStyle: props.headerStyle,
-  })),
+  Object.keys(props.rowModel.shape).map((key) => {
+    const isString = props.rowModel.shape[key] instanceof z.ZodString
+    return {
+      name: key,
+      label: key.charAt(0).toUpperCase() + key.slice(1),
+      field: key,
+      align: 'left',
+      sortable: true,
+      headerClasses: props.headerClass,
+      headerStyle: props.headerStyle,
+      isString,
+    }
+  }),
 )
 </script>
 

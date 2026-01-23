@@ -8,7 +8,8 @@
       bordered
       header-class="text-h6 bg-blue text-white"
       header-style="font-size: 0.9rem;"
-      :editable="false"
+      :editable="true"
+      :editable-columns="['name', 'description']"
       :create-new-row-fn="() => createNetworkVariable('garage')"
     />
   </q-page>
