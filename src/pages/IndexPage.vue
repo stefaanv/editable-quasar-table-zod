@@ -11,6 +11,7 @@
       :editable="true"
       :editable-columns="['name', 'description']"
       :create-new-row-fn="() => createNetworkVariable('garage')"
+      :column-labels="{ description: 'Omschrijving' }"
     />
   </q-page>
 </template>

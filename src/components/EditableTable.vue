@@ -4,7 +4,7 @@
     <template v-slot:body="props">
       <q-tr :props="props">
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
-          {{ props.row[col.name] }}
+          {{ getRowValue(props.row, col.name) }}
           <template
             v-if="col.isString && editable && editableColumns && editableColumns.includes(col.name)"
           >
@@ -29,6 +29,7 @@ defineOptions({
 
 const props = withDefaults(
   defineProps<{
+    columnLabels?: Partial<Record<keyof z.infer<z.ZodObject<T>>, string>>
     rowKey: string
     rowModel: z.ZodObject<T>
     data?: z.infer<z.ZodObject<T>>[]
@@ -46,12 +47,25 @@ const props = withDefaults(
   },
 )
 
+function getRowValue(row: Record<string, unknown>, key: string) {
+  return row[key]
+}
+
+function getColumnLabel(
+  labels: Partial<Record<keyof z.infer<z.ZodObject<T>>, string>> | undefined,
+  key: string,
+): string | undefined {
+  return labels && (labels as Record<string, string>)[key]
+}
+
 const columns = computed<QTableColumn[]>(() =>
   Object.keys(props.rowModel.shape).map((key) => {
     const isString = props.rowModel.shape[key] instanceof z.ZodString
+    const colLabel = getColumnLabel(props.columnLabels, key)
+    const label = colLabel ?? key.charAt(0).toUpperCase() + key.slice(1)
     return {
       name: key,
-      label: key.charAt(0).toUpperCase() + key.slice(1),
+      label,
       field: key,
       align: 'left',
       sortable: true,
