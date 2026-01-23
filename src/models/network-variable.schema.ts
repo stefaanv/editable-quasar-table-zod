@@ -21,6 +21,7 @@ export const NetworkVariableSchema = z.object({
   direction: NwVarDirectionEnum.default('in'),
   use: NwVarUseEnum.default('button'),
   address: z.number().int().min(0),
+  test: z.number(),
 })
 
 export type NetworkVariable = z.infer<typeof NetworkVariableSchema>
@@ -35,3 +36,4 @@ export function createNetworkVariable(
     name: variableName,
   } as NetworkVariable
 }
+console.log(NetworkVariableSchema.toJSONSchema())

@@ -5,7 +5,9 @@
       <q-tr :props="props">
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           {{ props.row[col.name] }}
-          <template v-if="col.isString && editable && editableColumns?.includes(col.name)">
+          <template
+            v-if="col.colEditType === 'string' && editable && editableColumns?.includes(col.name)"
+          >
             <q-popup-edit
               v-model="props.row[col.name]"
               v-slot="scope"
@@ -77,16 +79,28 @@ const columns = computed<QTableColumn[]>(() =>
   Object.keys(props.rowModel.shape)
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     .filter((key) => !(props.hideColumns ?? ([] as Array<RowKey>)).includes(key as RowKey))
-    .map((key) => ({
-      name: key,
-      label: getColumnLabel(key) ?? capitalize(key),
-      field: key,
-      align: 'left' as const,
-      sortable: true,
-      headerClasses: props.headerClass,
-      headerStyle: props.headerStyle,
-      isString: props.rowModel.shape[key] instanceof z.ZodString,
-    })),
+    .map((key) => {
+      const schema = props.rowModel.toJSONSchema().properties?.[key]
+      const isEnum = props.rowModel.shape[key] instanceof z.ZodEnum
+      console.log(props.rowModel.shape[key]?._zod.def, props.rowModel.shape[key]?._zod)
+      const colEditType = isEnum
+        ? 'enum'
+        : typeof schema === 'object' && schema && 'type' in schema
+          ? schema.type
+          : undefined
+      // console.log({ key, schema, colEditType })
+
+      return {
+        name: key,
+        label: getColumnLabel(key) ?? capitalize(key),
+        field: key,
+        align: 'left' as const,
+        sortable: true,
+        headerClasses: props.headerClass,
+        headerStyle: props.headerStyle,
+        colEditType,
+      }
+    }),
 )
 </script>
 
