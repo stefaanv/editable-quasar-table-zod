@@ -10,6 +10,7 @@
       header-style="font-size: 0.9rem;"
       :editable="true"
       :editable-columns="['name', 'description']"
+      :hide-columns="['id']"
       :create-new-row-fn="() => createNetworkVariable('garage')"
       :column-labels="{ description: 'Omschrijving' }"
     />

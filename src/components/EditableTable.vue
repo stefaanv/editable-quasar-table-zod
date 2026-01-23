@@ -45,6 +45,7 @@ const props = withDefaults(
     headerStyle?: string
     editable: boolean
     editableColumns?: Array<RowKey>
+    hideColumns?: Array<RowKey>
     createNewRowFn: () => Row
   }>(),
   {
@@ -61,16 +62,19 @@ const getColumnLabel = (key: string) =>
   (props.columnLabels as Record<string, string> | undefined)?.[key]
 
 const columns = computed<QTableColumn[]>(() =>
-  Object.keys(props.rowModel.shape).map((key) => ({
-    name: key,
-    label: getColumnLabel(key) ?? capitalize(key),
-    field: key,
-    align: 'left' as const,
-    sortable: true,
-    headerClasses: props.headerClass,
-    headerStyle: props.headerStyle,
-    isString: props.rowModel.shape[key] instanceof z.ZodString,
-  })),
+  Object.keys(props.rowModel.shape)
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    .filter((key) => !(props.hideColumns ?? ([] as Array<RowKey>)).includes(key as RowKey))
+    .map((key) => ({
+      name: key,
+      label: getColumnLabel(key) ?? capitalize(key),
+      field: key,
+      align: 'left' as const,
+      sortable: true,
+      headerClasses: props.headerClass,
+      headerStyle: props.headerStyle,
+      isString: props.rowModel.shape[key] instanceof z.ZodString,
+    })),
 )
 </script>
 
