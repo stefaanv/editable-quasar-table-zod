@@ -5,10 +5,24 @@
       <q-tr :props="props">
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           {{ props.row[col.name] }}
-          <template v-if="col.colEditType === 'string' && editable && editableColumns?.includes(col.name)">
-            <q-popup-edit v-model="props.row[col.name]" v-slot="scope"
-              @save="(newValue) => handleSave(props.row, col.name, newValue)">
-              <q-input v-model="scope.value" autofocus dense @keyup.enter="scope.set" @keyup.esc="scope.cancel" />
+          <template
+            v-if="col.colEditType === 'input' && editable && editableColumns?.includes(col.name)"
+          >
+            <q-popup-edit
+              v-model="props.row[col.name]"
+              v-slot="scope"
+              @save="(newValue) => handleSave(col.colType, props.row, col.name, newValue)"
+            >
+              <q-input
+                v-model="scope.value"
+                autofocus
+                dense
+                @keyup.enter="scope.set"
+                @keyup.esc="scope.cancel"
+                :type="col.inputSubType"
+                :mask="col.mask"
+                :step="col.step"
+              />
             </q-popup-edit>
           </template>
         </q-td>
@@ -57,33 +71,27 @@ const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 const getColumnLabel = (key: string) =>
   (props.columnLabels as Record<string, string> | undefined)?.[key]
 
-const handleSave = (row: Row, colName: RowKey, newValue: string) => {
+const handleSave = (colType: string, row: Row, colName: RowKey, newValue: string) => {
+  // Find the column type for this column
+  const cleanedValue = cleanInput(colType, newValue)
   // TypeScript can't narrow generic indexed types, so we need to suppress this
   // @ts-expect-error - runtime check ensures type safety
-  row[colName] = newValue
+  row[colName] = cleanedValue
   props.updateRow?.(row)
 }
+type PropType = { type: 'string' | 'integer' | 'number' | 'boolean'; enum?: string[] }
 
 const columns = computed<QTableColumn[]>(() =>
   Object.keys(props.rowModel.shape)
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     .filter((key) => !(props.hideColumns ?? ([] as Array<RowKey>)).includes(key as RowKey))
     .map((key) => {
-      const schema = props.rowModel.toJSONSchema().properties?.[key]
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const propertySchema = props.rowModel.shape[key] as z.ZodType<any, unknown>
-      const isEnum = getBaseEnum(propertySchema) !== null
-      const enumEntries: string[] = isEnum
-        ? getBaseEnum(propertySchema)!.options
-        : []
-      if (isEnum) console.log(key, enumEntries)
-
-      const colEditType = isEnum
-        ? 'enum'
-        : typeof schema === 'object' && schema && 'type' in schema
-          ? schema.type
-          : undefined
-
+      const colSchema = props.rowModel.toJSONSchema().properties?.[key] as PropType
+      const colType = colSchema?.type ?? 'string'
+      const colEditType =
+        colSchema.type === 'boolean' ? 'checkbox' : colSchema.enum ? 'dropdown' : 'input'
+      const enumEntries = colEditType === 'dropdown' && 'enum' in colSchema ? colSchema.enum : []
+      // console.log(key, colEditType)
       return {
         name: key,
         label: getColumnLabel(key) ?? capitalize(key),
@@ -92,30 +100,22 @@ const columns = computed<QTableColumn[]>(() =>
         sortable: true,
         headerClasses: props.headerClass,
         headerStyle: props.headerStyle,
+        colType,
         colEditType,
+        inputSubType: colEditType === 'input' ? 'text' : 'number',
+        enumEntries,
+        mask: colSchema.type === 'integer' ? '##########' : undefined,
+        step: colSchema.type === 'integer' ? '1' : 'any',
       }
     }),
 )
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getBaseEnum(zodType: z.ZodTypeAny): z.ZodEnum<any> | null {
-  // 1. Direct check
-  if (zodType instanceof z.ZodEnum) {
-    return zodType
+function cleanInput(colType: string, newValue: string) {
+  if (colType === 'integer') {
+    newValue = parseInt(newValue).toString()
   }
-
-  // 2. Unwrap Default or Optional
-  // We check for the existence of _def safely
-  if ('_def' in zodType) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const def = (zodType as any)._def
-
-    if (zodType instanceof z.ZodDefault || zodType instanceof z.ZodOptional) {
-      return getBaseEnum(def.innerType)
-    }
-  }
-
-  return null
+  console.log('Cleaning input', colType, newValue)
+  return newValue
 }
 </script>
 

@@ -21,7 +21,8 @@ export const NetworkVariableSchema = z.object({
   direction: NwVarDirectionEnum.default('in'),
   use: NwVarUseEnum.default('button'),
   address: z.number().int().min(0),
-  test: z.number(),
+  number: z.number(),
+  bool: z.boolean(),
 })
 
 export type NetworkVariable = z.infer<typeof NetworkVariableSchema>
@@ -37,30 +38,4 @@ export function createNetworkVariable(
   } as NetworkVariable
 }
 
-/*
-// console.log(NetworkVariableSchema.shape['direction'].def.innerType instanceof ZodEnum)
-const dirField = getBaseEnum(NetworkVariableSchema.shape['direction'])
-console.log(dirField instanceof ZodEnum)
-if (dirField instanceof ZodEnum) console.log((dirField as ZodEnum).options)
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getBaseEnum(zodType: z.ZodTypeAny): ZodEnum<any> | null {
-  // 1. Direct check
-  if (zodType instanceof ZodEnum) {
-    return zodType
-  }
-
-  // 2. Unwrap Default or Optional
-  // We check for the existence of _def safely
-  if ('_def' in zodType) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const def = (zodType as any)._def
-
-    if (zodType instanceof ZodDefault || zodType instanceof ZodOptional) {
-      return getBaseEnum(def.innerType)
-    }
-  }
-
-  return null
-}
-*/
+console.log(NetworkVariableSchema.toJSONSchema())
