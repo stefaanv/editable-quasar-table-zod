@@ -5,21 +5,10 @@
       <q-tr :props="props">
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           {{ props.row[col.name] }}
-          <template
-            v-if="col.colEditType === 'string' && editable && editableColumns?.includes(col.name)"
-          >
-            <q-popup-edit
-              v-model="props.row[col.name]"
-              v-slot="scope"
-              @save="(newValue) => handleSave(props.row, col.name, newValue)"
-            >
-              <q-input
-                v-model="scope.value"
-                autofocus
-                dense
-                @keyup.enter="scope.set"
-                @keyup.esc="scope.cancel"
-              />
+          <template v-if="col.colEditType === 'string' && editable && editableColumns?.includes(col.name)">
+            <q-popup-edit v-model="props.row[col.name]" v-slot="scope"
+              @save="(newValue) => handleSave(props.row, col.name, newValue)">
+              <q-input v-model="scope.value" autofocus dense @keyup.enter="scope.set" @keyup.esc="scope.cancel" />
             </q-popup-edit>
           </template>
         </q-td>
@@ -31,7 +20,7 @@
 <script setup lang="ts" generic="T extends z.ZodRawShape">
 import z from 'zod'
 import { computed } from 'vue'
-import type { QTableColumn } from 'quasar'
+import { type QTableColumn } from 'quasar'
 
 type RowModel = z.ZodObject<T>
 type Row = z.infer<RowModel>
@@ -81,14 +70,19 @@ const columns = computed<QTableColumn[]>(() =>
     .filter((key) => !(props.hideColumns ?? ([] as Array<RowKey>)).includes(key as RowKey))
     .map((key) => {
       const schema = props.rowModel.toJSONSchema().properties?.[key]
-      const isEnum = props.rowModel.shape[key] instanceof z.ZodEnum
-      console.log(props.rowModel.shape[key]?._zod.def, props.rowModel.shape[key]?._zod)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const propertySchema = props.rowModel.shape[key] as z.ZodType<any, unknown>
+      const isEnum = getBaseEnum(propertySchema) !== null
+      const enumEntries: string[] = isEnum
+        ? getBaseEnum(propertySchema)!.options
+        : []
+      if (isEnum) console.log(key, enumEntries)
+
       const colEditType = isEnum
         ? 'enum'
         : typeof schema === 'object' && schema && 'type' in schema
           ? schema.type
           : undefined
-      // console.log({ key, schema, colEditType })
 
       return {
         name: key,
@@ -102,6 +96,27 @@ const columns = computed<QTableColumn[]>(() =>
       }
     }),
 )
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getBaseEnum(zodType: z.ZodTypeAny): z.ZodEnum<any> | null {
+  // 1. Direct check
+  if (zodType instanceof z.ZodEnum) {
+    return zodType
+  }
+
+  // 2. Unwrap Default or Optional
+  // We check for the existence of _def safely
+  if ('_def' in zodType) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const def = (zodType as any)._def
+
+    if (zodType instanceof z.ZodDefault || zodType instanceof z.ZodOptional) {
+      return getBaseEnum(def.innerType)
+    }
+  }
+
+  return null
+}
 </script>
 
 <style scoped></style>

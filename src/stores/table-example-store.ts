@@ -10,7 +10,7 @@ export const useTableExampleStore = defineStore('tableExample', () => {
       [3, 'Liftkoker', 'garage_poort_motor', 'Motor garage poort', 'bool', 'out', 'motor', 10],
     ].map(
       ([id, plc, name, description, type, direction, use, address]) =>
-        ({ id, plc, name, description, type, direction, use, address }) as NetworkVariable,
+        ({ id, plc, name, description, variant: type, direction, use, address }) as NetworkVariable,
     ),
   )
 
