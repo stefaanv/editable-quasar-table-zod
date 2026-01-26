@@ -43,6 +43,47 @@
         </q-td>
       </q-tr>
     </template>
+    <template v-slot:bottom="scope">
+      <div class="row items-center full-width">
+        <q-btn label="Toevoegen" icon="add" color="primary" flat dense @click="addNewRow" />
+        <q-space />
+        <div class="row items-center">
+          <span class="q-mr-md">Records per page:</span>
+          <q-select
+            :model-value="scope.pagination.rowsPerPage"
+            :options="rowsPerPageOptions"
+            dense
+            options-dense
+            borderless
+            @update:model-value="(val) => (scope.pagination.rowsPerPage = val)"
+          />
+          <span class="q-ml-md">
+            {{
+              getPaginationRange(scope.pagination.page, scope.pagination.rowsPerPage).firstRow
+            }}-{{
+              getPaginationRange(scope.pagination.page, scope.pagination.rowsPerPage).lastRow
+            }}
+            of {{ totalRows }}
+          </span>
+          <template v-if="scope.pagesNumber > 1">
+            <q-btn
+              icon="chevron_left"
+              flat
+              dense
+              :disable="scope.isFirstPage"
+              @click="scope.prevPage"
+            />
+            <q-btn
+              icon="chevron_right"
+              flat
+              dense
+              :disable="scope.isLastPage"
+              @click="scope.nextPage"
+            />
+          </template>
+        </div>
+      </div>
+    </template>
   </q-table>
 </template>
 
@@ -71,8 +112,8 @@ const props = withDefaults(
     editable: boolean
     editableColumns?: Array<RowKey>
     hideColumns?: Array<RowKey>
-    createNewRowFn: () => Row
     updateRow?: (row: Row) => void
+    addRow?: () => void
   }>(),
   {
     rowModel: () => z.object({}) as RowModel,
@@ -86,8 +127,22 @@ const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 type PropType = { type: 'string' | 'integer' | 'number' | 'boolean'; enum?: string[] }
 type ColEditType = 'text' | 'integer' | 'real' | 'dropdown' | 'checkbox'
 
+const totalRows = computed(() => props.data?.length || 0)
+const rowsPerPageOptions = [3, 5, 7, 10, 15, 20, 25, 50]
+
+const getPaginationRange = (page: number, rowsPerPage: number) => {
+  const firstRow = (page - 1) * rowsPerPage + 1
+  const lastRow = Math.min(page * rowsPerPage, totalRows.value)
+  return { firstRow, lastRow }
+}
+
 const getColumnLabel = (key: string) =>
   (props.columnLabels as Record<string, string> | undefined)?.[key]
+
+const addNewRow = () => {
+  if (!props.addRow) return
+  props.addRow()
+}
 
 const handleSave = (row: Row, colName: RowKey, newValue: string) => {
   // TypeScript can't narrow generic indexed types, so we need to suppress this

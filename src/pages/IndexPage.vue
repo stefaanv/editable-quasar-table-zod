@@ -11,7 +11,6 @@
       :editable="true"
       :editable-columns="['*']"
       :hide-columns="['id']"
-      :create-new-row-fn="() => createHealthcareProvider()"
       :column-labels="{
         requestCounter: 'Teller',
         firstName: 'Voornaam',
@@ -20,16 +19,14 @@
         docType: 'Soort',
       }"
       :update-row="store.updateRow"
+      :add-row="store.addRow"
     />
   </q-page>
 </template>
 
 <script setup lang="ts">
 import EditableTable from 'src/components/EditableTable.vue'
-import {
-  createHealthcareProvider,
-  HealthcareProviderSchema,
-} from 'src/models/healthcare-provider.schema'
+import { HealthcareProviderSchema } from 'src/models/healthcare-provider.schema'
 
 import { useTableExampleStore } from 'src/stores/table-example-store'
 const store = useTableExampleStore()

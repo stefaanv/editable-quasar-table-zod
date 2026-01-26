@@ -1,6 +1,9 @@
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref } from 'vue'
-import { type HealthcareProvider } from 'src/models/healthcare-provider.schema'
+import {
+  createHealthcareProvider,
+  type HealthcareProvider,
+} from 'src/models/healthcare-provider.schema'
 
 export const useTableExampleStore = defineStore('tableExample', () => {
   const data = ref<HealthcareProvider[]>(
@@ -19,7 +22,17 @@ export const useTableExampleStore = defineStore('tableExample', () => {
     const row = data.value.find((r) => r.id === updatedRow.id)!
     Object.assign(row, updatedRow)
   }
-  return { data, updateRow }
+
+  function addRow(): HealthcareProvider {
+    const newDoc = createHealthcareProvider()
+    const id = Math.max(...data.value.map((d) => d.id)) + 1
+    newDoc.id = id
+    data.value.push(newDoc)
+    console.log('Added new row:', newDoc)
+    return newDoc
+  }
+
+  return { data, updateRow, addRow }
 })
 
 if (import.meta.hot) {
