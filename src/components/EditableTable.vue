@@ -1,24 +1,19 @@
 <template>
-  <p>{{ props.data[0] }}</p>
   <q-table :columns="columns" :rows="props.data" :row-key="props.rowKey" v-bind="$attrs">
     <template v-slot:body="props">
       <q-tr :props="props">
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           {{ props.row[col.name] }}
-          <template
-            v-if="col.colEditType === 'string' && editable && editableColumns?.includes(col.name)"
-          >
+          <template v-if="col.editable">
             <q-popup-edit
               v-model="props.row[col.name]"
               v-slot="scope"
               @save="(newValue) => handleSave(props.row, col.name, newValue)"
             >
               <q-input
+                v-if="col.colEditType === 'text'"
                 v-model="scope.value"
-                autofocus
-                dense
-                @keyup.enter="scope.set"
-                @keyup.esc="scope.cancel"
+                v-bind="inputProps(scope)"
               />
             </q-popup-edit>
           </template>
@@ -35,7 +30,8 @@ import type { QTableColumn } from 'quasar'
 
 type RowModel = z.ZodObject<T>
 type Row = z.infer<RowModel>
-type RowKey = keyof Row
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+type RowKey = keyof Row | '*'
 
 defineOptions({
   inheritAttrs: false,
@@ -64,6 +60,7 @@ const props = withDefaults(
 )
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
+type PropType = { type: 'string' | 'integer' | 'number' | 'boolean'; enum?: string[] }
 
 const getColumnLabel = (key: string) =>
   (props.columnLabels as Record<string, string> | undefined)?.[key]
@@ -75,20 +72,30 @@ const handleSave = (row: Row, colName: RowKey, newValue: string) => {
   props.updateRow?.(row)
 }
 
+const inputProps = (scope: { value: unknown; set: () => void; cancel: () => void }) => {
+  return {
+    autofocus: true,
+    dense: true,
+    onKeyup: (e: KeyboardEvent) => {
+      if (e.key === 'Enter') scope.set()
+    },
+  }
+}
+
 const columns = computed<QTableColumn[]>(() =>
   Object.keys(props.rowModel.shape)
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    .filter((key) => !(props.hideColumns ?? ([] as Array<RowKey>)).includes(key as RowKey))
+    .filter((key) => !(props.hideColumns ?? []).includes(key as RowKey))
     .map((key) => {
-      const schema = props.rowModel.toJSONSchema().properties?.[key]
-      const isEnum = props.rowModel.shape[key] instanceof z.ZodEnum
-      console.log(props.rowModel.shape[key]?._zod.def, props.rowModel.shape[key]?._zod)
-      const colEditType = isEnum
-        ? 'enum'
-        : typeof schema === 'object' && schema && 'type' in schema
-          ? schema.type
-          : undefined
-      // console.log({ key, schema, colEditType })
+      const colSchema = props.rowModel.toJSONSchema().properties?.[key] as PropType
+      const colEditType =
+        colSchema.type === 'boolean' ? 'checkbox' : colSchema.enum ? 'dropdown' : 'text'
+      const editable =
+        props.editable &&
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+        (props.editableColumns?.includes(key as RowKey) || props.editableColumns?.includes('*'))
+      // const enumEntries = colEditType === 'dropdown' && 'enum' in colSchema ? colSchema.enum : []
+      console.log(key, editable, colEditType)
 
       return {
         name: key,
@@ -99,6 +106,7 @@ const columns = computed<QTableColumn[]>(() =>
         headerClasses: props.headerClass,
         headerStyle: props.headerStyle,
         colEditType,
+        editable,
       }
     }),
 )

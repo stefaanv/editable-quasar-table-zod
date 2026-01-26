@@ -1,20 +1,20 @@
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref } from 'vue'
-import type { NetworkVariable } from 'src/models/network-variable.schema'
+import { type HealthcareProvider } from 'src/models/healthcare-provider.schema'
 
 export const useTableExampleStore = defineStore('tableExample', () => {
-  const data = ref<NetworkVariable[]>(
+  const data = ref<HealthcareProvider[]>(
     [
-      [1, 'Garage', 'clp_living', 'Licht Living', 'bool', 'in', 'button', 0],
-      [2, 'Garage', 'rl_pct_bureau', 'pct rolluik Bureau', 'type', 'in', 'opening_rolluik_pct', 1],
-      [3, 'Liftkoker', 'garage_poort_motor', 'Motor garage poort', 'bool', 'out', 'motor', 10],
+      [1, 'Hilde', 'Moerman', 'Marke', 'dokter', 145, true],
+      [2, 'Karen', 'Bruyland', 'Kortrijk', 'bioloog', 0, true],
+      [3, 'Hendrik', 'De Bosschere ', 'Kortrijk', 'dierenarts', 10, false],
     ].map(
-      ([id, plc, name, description, type, direction, use, address]) =>
-        ({ id, plc, name, description, type, direction, use, address }) as NetworkVariable,
+      ([id, firstName, name, address, docType, rqc, active]) =>
+        ({ id, firstName, name, address, docType, requestCounter: rqc, active }) as HealthcareProvider, //prettier-ignore
     ),
   )
 
-  function updateRow(updatedRow: NetworkVariable) {
+  function updateRow(updatedRow: HealthcareProvider) {
     console.log('Updating row:', updatedRow.id, '=>', updatedRow)
   }
   return { data, updateRow }

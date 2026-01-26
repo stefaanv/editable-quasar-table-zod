@@ -2,17 +2,23 @@
   <q-page class="row items-center justify-evenly">
     <editable-table
       row-key="id"
-      :row-model="NetworkVariableSchema"
+      :row-model="HealthcareProviderSchema"
       :data="store.data"
       flat
       bordered
       header-class="text-h6 bg-blue text-white"
       header-style="font-size: 0.9rem;"
       :editable="true"
-      :editable-columns="['name', 'description']"
+      :editable-columns="['*']"
       :hide-columns="['id']"
-      :create-new-row-fn="() => createNetworkVariable('garage')"
-      :column-labels="{ description: 'Omschrijving' }"
+      :create-new-row-fn="() => createHealthcareProvider()"
+      :column-labels="{
+        requestCounter: 'Teller',
+        firstName: 'Voornaam',
+        name: 'Familienaam',
+        address: 'Adres',
+        docType: 'Soort',
+      }"
       :update-row="store.updateRow"
     />
   </q-page>
@@ -20,7 +26,11 @@
 
 <script setup lang="ts">
 import EditableTable from 'src/components/EditableTable.vue'
-import { createNetworkVariable, NetworkVariableSchema } from 'src/models/network-variable.schema'
+import {
+  createHealthcareProvider,
+  HealthcareProviderSchema,
+} from 'src/models/healthcare-provider.schema'
+
 import { useTableExampleStore } from 'src/stores/table-example-store'
 const store = useTableExampleStore()
 </script>
