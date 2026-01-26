@@ -20,6 +20,7 @@
       }"
       :update-row="store.updateRow"
       :add-row="store.addRow"
+      :delete-row="store.deleteRow"
     />
   </q-page>
 </template>

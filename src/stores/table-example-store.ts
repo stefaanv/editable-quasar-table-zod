@@ -32,7 +32,15 @@ export const useTableExampleStore = defineStore('tableExample', () => {
     return newDoc
   }
 
-  return { data, updateRow, addRow }
+  function deleteRow(rowToDelete: HealthcareProvider) {
+    console.log('Deleting row:', rowToDelete.id)
+    const index = data.value.findIndex((r) => r.id === rowToDelete.id)
+    if (index !== -1) {
+      data.value.splice(index, 1)
+    }
+  }
+
+  return { data, updateRow, addRow, deleteRow }
 })
 
 if (import.meta.hot) {

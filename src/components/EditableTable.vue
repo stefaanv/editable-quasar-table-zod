@@ -1,5 +1,13 @@
 <template>
   <q-table :columns="columns" :rows="props.data" :row-key="props.rowKey" v-bind="$attrs">
+    <template v-slot:header="headerProps">
+      <q-tr :props="headerProps">
+        <q-th v-for="col in headerProps.cols" :key="col.name" :props="headerProps">
+          {{ col.label }}
+        </q-th>
+        <q-th auto-width :class="props.headerClass" :style="props.headerStyle"></q-th>
+      </q-tr>
+    </template>
     <template v-slot:body="slotProps">
       <q-tr :props="slotProps">
         <q-td v-for="col in slotProps.cols" :key="col.name" :props="slotProps">
@@ -40,6 +48,9 @@
               </q-popup-edit>
             </template>
           </template>
+        </q-td>
+        <q-td auto-width>
+          <q-btn icon="delete" flat dense color="negative" @click="confirmDelete(slotProps.row)" />
         </q-td>
       </q-tr>
     </template>
@@ -90,7 +101,7 @@
 <script setup lang="ts" generic="T extends z.ZodRawShape">
 import z from 'zod'
 import { computed } from 'vue'
-import { type QTableColumn } from 'quasar'
+import { type QTableColumn, useQuasar } from 'quasar'
 
 type RowModel = z.ZodObject<T>
 type Row = z.infer<RowModel>
@@ -114,6 +125,7 @@ const props = withDefaults(
     hideColumns?: Array<RowKey>
     updateRow?: (row: Row) => void
     addRow?: () => void
+    deleteRow?: (row: Row) => void
   }>(),
   {
     rowModel: () => z.object({}) as RowModel,
@@ -138,6 +150,19 @@ const getPaginationRange = (page: number, rowsPerPage: number) => {
 
 const getColumnLabel = (key: string) =>
   (props.columnLabels as Record<string, string> | undefined)?.[key]
+
+const $q = useQuasar()
+
+const confirmDelete = (row: Row) => {
+  $q.dialog({
+    title: 'Confirm Delete',
+    message: 'Are you sure you want to delete this row?',
+    cancel: true,
+    persistent: true,
+  }).onOk(() => {
+    props.deleteRow?.(row)
+  })
+}
 
 const addNewRow = () => {
   if (!props.addRow) return
