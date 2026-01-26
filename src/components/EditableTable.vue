@@ -12,7 +12,12 @@
         <q-th v-for="col in headerProps.cols" :key="col.name" :props="headerProps">
           {{ col.label }}
         </q-th>
-        <q-th auto-width :class="props.headerClass" :style="props.headerStyle"></q-th>
+        <q-th
+          v-if="hasActions"
+          auto-width
+          :class="props.headerClass"
+          :style="props.headerStyle"
+        ></q-th>
       </q-tr>
     </template>
     <template v-slot:body="slotProps">
@@ -56,15 +61,37 @@
             </template>
           </template>
         </q-td>
-        <q-td auto-width>
-          <q-btn icon="content_copy" flat dense color="primary" @click="cloneRow(slotProps.row)" />
-          <q-btn icon="delete" flat dense color="negative" @click="confirmDelete(slotProps.row)" />
+        <q-td v-if="hasActions" auto-width>
+          <q-btn
+            v-if="canClone"
+            icon="content_copy"
+            flat
+            dense
+            color="primary"
+            @click="cloneRow(slotProps.row)"
+          />
+          <q-btn
+            v-if="canDelete"
+            icon="delete"
+            flat
+            dense
+            color="negative"
+            @click="confirmDelete(slotProps.row)"
+          />
         </q-td>
       </q-tr>
     </template>
     <template v-slot:bottom="scope">
       <div class="row items-center full-width">
-        <q-btn label="Toevoegen" icon="add" color="primary" flat dense @click="addNewRow" />
+        <q-btn
+          v-if="canAdd"
+          label="Toevoegen"
+          icon="add"
+          color="primary"
+          flat
+          dense
+          @click="addNewRow"
+        />
         <q-space />
         <div class="row items-center">
           <span class="q-mr-md">Records per page:</span>
@@ -135,6 +162,7 @@ const props = withDefaults(
     addRow?: (row?: Row) => void
     deleteRow?: (row: Row) => void
     initialRowsPerPage?: number
+    actions?: Action[]
   }>(),
   {
     rowModel: () => z.object({}) as RowModel,
@@ -142,15 +170,33 @@ const props = withDefaults(
     headerClass: '',
     headerStyle: '',
     initialRowsPerPage: 5,
+    actions: () => [],
   },
 )
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 type PropType = { type: 'string' | 'integer' | 'number' | 'boolean'; enum?: string[] }
 type ColEditType = 'text' | 'integer' | 'real' | 'dropdown' | 'checkbox'
+type Action = 'add' | 'clone' | 'delete'
 
 const totalRows = computed(() => props.data?.length || 0)
 const rowsPerPageOptions = [3, 5, 7, 10, 15, 20, 25, 50]
+
+const hasActions = computed(() => props.actions && props.actions.length > 0)
+const canAdd = computed(() => props.actions?.includes('add'))
+const canClone = computed(() => props.actions?.includes('clone'))
+const canDelete = computed(() => props.actions?.includes('delete'))
+
+// Validate that required functions are provided for enabled actions
+if (canAdd.value && !props.addRow) {
+  console.warn('[EditableTable] Action "add" is enabled but addRow prop is not provided')
+}
+if (canClone.value && !props.addRow) {
+  console.warn('[EditableTable] Action "clone" is enabled but addRow prop is not provided')
+}
+if (canDelete.value && !props.deleteRow) {
+  console.warn('[EditableTable] Action "delete" is enabled but deleteRow prop is not provided')
+}
 
 const getPaginationRange = (page: number, rowsPerPage: number) => {
   const firstRow = (page - 1) * rowsPerPage + 1

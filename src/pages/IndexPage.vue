@@ -22,6 +22,7 @@
       :add-row="store.addRow"
       :delete-row="store.deleteRow"
       :initial-rows-per-page="10"
+      :actions="['add', 'clone', 'delete']"
     />
   </q-page>
 </template>
