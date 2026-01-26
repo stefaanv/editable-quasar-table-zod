@@ -13,7 +13,7 @@
           {{ col.label }}
         </q-th>
         <q-th
-          v-if="hasActions"
+          v-if="hasActions && props.editable"
           auto-width
           :class="props.headerClass"
           :style="props.headerStyle"
@@ -24,9 +24,10 @@
       <q-tr :props="slotProps">
         <q-td v-for="col in slotProps.cols" :key="col.name" :props="slotProps">
           <q-checkbox
-            v-if="col.editable && col.colEditType === 'checkbox'"
+            v-if="col.colEditType === 'checkbox'"
             v-model="slotProps.row[col.name]"
             dense
+            :disable="!col.editable"
             @update:model-value="() => props.updateRow?.(slotProps.row)"
           />
           <template v-else>
@@ -61,7 +62,7 @@
             </template>
           </template>
         </q-td>
-        <q-td v-if="hasActions" auto-width>
+        <q-td v-if="hasActions && props.editable" auto-width>
           <q-btn
             v-if="canClone"
             icon="content_copy"
@@ -84,7 +85,7 @@
     <template v-slot:bottom="scope">
       <div class="row items-center full-width">
         <q-btn
-          v-if="canAdd"
+          v-if="canAdd && props.editable"
           label="Toevoegen"
           icon="add"
           color="primary"

@@ -7,8 +7,8 @@
       flat
       bordered
       header-class="text-h6 bg-blue text-white"
-      header-style="font-size: 0.9rem;"
-      :editable="true"
+      header-style="font-size: 1rem;"
+      :editable="false"
       :editable-columns="['*']"
       :hide-columns="['id']"
       :column-labels="{
