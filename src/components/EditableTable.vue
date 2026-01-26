@@ -8,7 +8,7 @@
             <q-popup-edit
               v-model="props.row[col.name]"
               v-slot="scope"
-              @save="(newValue) => handleSave(props.row, col.name, newValue)"
+              @save="(newValue) => handleSave(col.colType, props.row, col.name, newValue)"
             >
               <q-input
                 v-if="col.colEditType === 'text'"
@@ -26,7 +26,7 @@
 <script setup lang="ts" generic="T extends z.ZodRawShape">
 import z from 'zod'
 import { computed } from 'vue'
-import type { QTableColumn } from 'quasar'
+import { type QTableColumn } from 'quasar'
 
 type RowModel = z.ZodObject<T>
 type Row = z.infer<RowModel>
@@ -65,10 +65,12 @@ type PropType = { type: 'string' | 'integer' | 'number' | 'boolean'; enum?: stri
 const getColumnLabel = (key: string) =>
   (props.columnLabels as Record<string, string> | undefined)?.[key]
 
-const handleSave = (row: Row, colName: RowKey, newValue: string) => {
+const handleSave = (colType: string, row: Row, colName: RowKey, newValue: string) => {
+  // Find the column type for this column
+  const cleanedValue = cleanInput(colType, newValue)
   // TypeScript can't narrow generic indexed types, so we need to suppress this
   // @ts-expect-error - runtime check ensures type safety
-  row[colName] = newValue
+  row[colName] = cleanedValue
   props.updateRow?.(row)
 }
 
@@ -105,11 +107,20 @@ const columns = computed<QTableColumn[]>(() =>
         sortable: true,
         headerClasses: props.headerClass,
         headerStyle: props.headerStyle,
+        colType,
         colEditType,
         editable,
       }
     }),
 )
+
+function cleanInput(colType: string, newValue: string) {
+  if (colType === 'integer') {
+    newValue = parseInt(newValue).toString()
+  }
+  console.log('Cleaning input', colType, newValue)
+  return newValue
+}
 </script>
 
 <style scoped></style>
