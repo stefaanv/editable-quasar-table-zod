@@ -66,11 +66,9 @@ const getColumnLabel = (key: string) =>
   (props.columnLabels as Record<string, string> | undefined)?.[key]
 
 const handleSave = (colType: string, row: Row, colName: RowKey, newValue: string) => {
-  // Find the column type for this column
-  const cleanedValue = cleanInput(colType, newValue)
   // TypeScript can't narrow generic indexed types, so we need to suppress this
   // @ts-expect-error - runtime check ensures type safety
-  row[colName] = cleanedValue
+  row[colName] = newValue
   props.updateRow?.(row)
 }
 
@@ -97,7 +95,7 @@ const columns = computed<QTableColumn[]>(() =>
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         (props.editableColumns?.includes(key as RowKey) || props.editableColumns?.includes('*'))
       // const enumEntries = colEditType === 'dropdown' && 'enum' in colSchema ? colSchema.enum : []
-      console.log(key, editable, colEditType)
+      // console.log(key, editable, colEditType)
 
       return {
         name: key,
@@ -112,14 +110,6 @@ const columns = computed<QTableColumn[]>(() =>
       }
     }),
 )
-
-function cleanInput(colType: string, newValue: string) {
-  if (colType === 'integer') {
-    newValue = parseInt(newValue).toString()
-  }
-  console.log('Cleaning input', colType, newValue)
-  return newValue
-}
 </script>
 
 <style scoped></style>
