@@ -107,7 +107,6 @@ const columns = computed<QTableColumn[]>(() =>
         sortable: true,
         headerClasses: props.headerClass,
         headerStyle: props.headerStyle,
-        colType,
         colEditType,
         editable,
       }
