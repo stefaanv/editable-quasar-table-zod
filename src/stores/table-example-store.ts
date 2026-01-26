@@ -23,8 +23,8 @@ export const useTableExampleStore = defineStore('tableExample', () => {
     Object.assign(row, updatedRow)
   }
 
-  function addRow(): HealthcareProvider {
-    const newDoc = createHealthcareProvider()
+  function addRow(templateRow?: HealthcareProvider): HealthcareProvider {
+    const newDoc = templateRow ? { ...templateRow } : createHealthcareProvider()
     const id = Math.max(...data.value.map((d) => d.id)) + 1
     newDoc.id = id
     data.value.push(newDoc)

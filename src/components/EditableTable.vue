@@ -57,6 +57,7 @@
           </template>
         </q-td>
         <q-td auto-width>
+          <q-btn icon="content_copy" flat dense color="primary" @click="cloneRow(slotProps.row)" />
           <q-btn icon="delete" flat dense color="negative" @click="confirmDelete(slotProps.row)" />
         </q-td>
       </q-tr>
@@ -131,7 +132,7 @@ const props = withDefaults(
     editableColumns?: Array<RowKey>
     hideColumns?: Array<RowKey>
     updateRow?: (row: Row) => void
-    addRow?: () => void
+    addRow?: (row?: Row) => void
     deleteRow?: (row: Row) => void
     initialRowsPerPage?: number
   }>(),
@@ -171,6 +172,11 @@ const confirmDelete = (row: Row) => {
   }).onOk(() => {
     props.deleteRow?.(row)
   })
+}
+
+const cloneRow = (row: Row) => {
+  const clonedRow = { ...row }
+  props.addRow?.(clonedRow)
 }
 
 const addNewRow = () => {
