@@ -30,6 +30,13 @@
                     ...numericInputHandlers(col.colEditType, scope),
                   }"
                 />
+                <q-select
+                  v-if="col.colEditType === 'dropdown'"
+                  v-model="scope.value"
+                  :options="col.enumOptions"
+                  v-bind="inputProps(col.colEditType, scope)"
+                  @update:model-value="scope.set"
+                />
               </q-popup-edit>
             </template>
           </template>
@@ -142,6 +149,7 @@ const columns = computed<QTableColumn[]>(() =>
         props.editable &&
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         (props.editableColumns?.includes(key as RowKey) || props.editableColumns?.includes('*'))
+      const enumOptions = colEditType === 'dropdown' && colSchema.enum ? colSchema.enum : []
       // console.log(key, editable, colEditType)
 
       return {
@@ -154,6 +162,7 @@ const columns = computed<QTableColumn[]>(() =>
         headerStyle: props.headerStyle,
         colEditType,
         editable,
+        enumOptions,
       }
     }),
 )
