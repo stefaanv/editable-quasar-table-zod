@@ -16,6 +16,8 @@ export const useTableExampleStore = defineStore('tableExample', () => {
 
   function updateRow(updatedRow: HealthcareProvider) {
     console.log('Updating row:', updatedRow.id, '=>', updatedRow)
+    const row = data.value.find((r) => r.id === updatedRow.id)!
+    Object.assign(row, updatedRow)
   }
   return { data, updateRow }
 })

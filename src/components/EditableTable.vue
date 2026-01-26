@@ -1,21 +1,37 @@
 <template>
   <q-table :columns="columns" :rows="props.data" :row-key="props.rowKey" v-bind="$attrs">
-    <template v-slot:body="props">
-      <q-tr :props="props">
-        <q-td v-for="col in props.cols" :key="col.name" :props="props">
-          {{ props.row[col.name] }}
-          <template v-if="col.editable">
-            <q-popup-edit
-              v-model="props.row[col.name]"
-              v-slot="scope"
-              @save="(newValue) => handleSave(col.colType, props.row, col.name, newValue)"
-            >
-              <q-input
-                v-if="col.colEditType === 'text'"
-                v-model="scope.value"
-                v-bind="inputProps(scope)"
-              />
-            </q-popup-edit>
+    <template v-slot:body="slotProps">
+      <q-tr :props="slotProps">
+        <q-td v-for="col in slotProps.cols" :key="col.name" :props="slotProps">
+          <q-checkbox
+            v-if="col.editable && col.colEditType === 'checkbox'"
+            v-model="slotProps.row[col.name]"
+            dense
+            @update:model-value="() => props.updateRow?.(slotProps.row)"
+          />
+          <template v-else>
+            {{ slotProps.row[col.name] }}
+            <template v-if="col.editable">
+              <q-popup-edit
+                v-model="slotProps.row[col.name]"
+                v-slot="scope"
+                @save="(newValue) => handleSave(slotProps.row, col.name, newValue)"
+              >
+                <q-input
+                  v-if="col.colEditType === 'text'"
+                  v-model="scope.value"
+                  v-bind="inputProps(col.colEditType, scope)"
+                />
+                <q-input
+                  v-if="['integer', 'real'].includes(col.colEditType)"
+                  v-model.number="scope.value"
+                  v-bind="{
+                    ...inputProps(col.colEditType, scope),
+                    ...numericInputHandlers(col.colEditType, scope),
+                  }"
+                />
+              </q-popup-edit>
+            </template>
           </template>
         </q-td>
       </q-tr>
@@ -61,20 +77,42 @@ const props = withDefaults(
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 type PropType = { type: 'string' | 'integer' | 'number' | 'boolean'; enum?: string[] }
+type ColEditType = 'text' | 'integer' | 'real' | 'dropdown' | 'checkbox'
 
 const getColumnLabel = (key: string) =>
   (props.columnLabels as Record<string, string> | undefined)?.[key]
 
-const handleSave = (colType: string, row: Row, colName: RowKey, newValue: string) => {
-  // Find the column type for this column
-  const cleanedValue = cleanInput(colType, newValue)
+const handleSave = (row: Row, colName: RowKey, newValue: string) => {
   // TypeScript can't narrow generic indexed types, so we need to suppress this
   // @ts-expect-error - runtime check ensures type safety
-  row[colName] = cleanedValue
+  row[colName] = newValue
   props.updateRow?.(row)
 }
 
-const inputProps = (scope: { value: unknown; set: () => void; cancel: () => void }) => {
+const parseNumericValue = (colEditType: string, value: string | number | null) => {
+  const parser = colEditType === 'integer' ? parseInt : parseFloat
+  return value ? parser(value.toString()) : 0
+}
+
+const numericInputHandlers = (
+  colEditType: string,
+  scope: { value: unknown; set: () => void; cancel: () => void },
+) => ({
+  'onUpdate:modelValue': (val: string | number | null) => {
+    scope.value = parseNumericValue(colEditType, val)
+  },
+  onBlur: (e: Event) => {
+    scope.value = parseNumericValue(colEditType, (e.target as HTMLInputElement).value)
+  },
+  type: 'number' as const,
+  'input-class': 'no-spinners',
+  step: colEditType === 'integer' ? ('1' as const) : ('any' as const),
+})
+
+const inputProps = (
+  editType: ColEditType,
+  scope: { value: unknown; set: () => void; cancel: () => void },
+) => {
   return {
     autofocus: true,
     dense: true,
@@ -84,20 +122,27 @@ const inputProps = (scope: { value: unknown; set: () => void; cancel: () => void
   }
 }
 
+const CONVERT_COL_TYPES: Record<string, ColEditType> = {
+  string: 'text',
+  integer: 'integer',
+  number: 'real',
+  boolean: 'checkbox',
+}
+
 const columns = computed<QTableColumn[]>(() =>
   Object.keys(props.rowModel.shape)
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     .filter((key) => !(props.hideColumns ?? []).includes(key as RowKey))
     .map((key) => {
       const colSchema = props.rowModel.toJSONSchema().properties?.[key] as PropType
-      const colEditType =
-        colSchema.type === 'boolean' ? 'checkbox' : colSchema.enum ? 'dropdown' : 'text'
+      const colEditType: ColEditType = colSchema.enum
+        ? 'dropdown'
+        : (CONVERT_COL_TYPES[colSchema.type] ?? 'text')
       const editable =
         props.editable &&
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         (props.editableColumns?.includes(key as RowKey) || props.editableColumns?.includes('*'))
-      // const enumEntries = colEditType === 'dropdown' && 'enum' in colSchema ? colSchema.enum : []
-      console.log(key, editable, colEditType)
+      // console.log(key, editable, colEditType)
 
       return {
         name: key,
@@ -112,14 +157,6 @@ const columns = computed<QTableColumn[]>(() =>
       }
     }),
 )
-
-function cleanInput(colType: string, newValue: string) {
-  if (colType === 'integer') {
-    newValue = parseInt(newValue).toString()
-  }
-  console.log('Cleaning input', colType, newValue)
-  return newValue
-}
 </script>
 
 <style scoped></style>
