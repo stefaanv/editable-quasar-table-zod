@@ -7,11 +7,10 @@
       flat
       bordered
       header-class="text-h6 bg-blue text-white"
-      header-style="font-size: 0.9rem;"
-      :editable="true"
+      header-style="font-size: 1rem;"
+      :editable="false"
       :editable-columns="['*']"
       :hide-columns="['id']"
-      :create-new-row-fn="() => createHealthcareProvider()"
       :column-labels="{
         requestCounter: 'Teller',
         firstName: 'Voornaam',
@@ -20,16 +19,17 @@
         docType: 'Soort',
       }"
       :update-row="store.updateRow"
+      :add-row="store.addRow"
+      :delete-row="store.deleteRow"
+      :initial-rows-per-page="10"
+      :actions="['add', 'clone', 'delete']"
     />
   </q-page>
 </template>
 
 <script setup lang="ts">
 import EditableTable from 'src/components/EditableTable.vue'
-import {
-  createHealthcareProvider,
-  HealthcareProviderSchema,
-} from 'src/models/healthcare-provider.schema'
+import { HealthcareProviderSchema } from 'src/models/healthcare-provider.schema'
 
 import { useTableExampleStore } from 'src/stores/table-example-store'
 const store = useTableExampleStore()
