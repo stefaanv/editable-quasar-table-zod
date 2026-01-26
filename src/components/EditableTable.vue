@@ -1,5 +1,12 @@
 <template>
-  <q-table :columns="columns" :rows="props.data" :row-key="props.rowKey" v-bind="$attrs">
+  <q-table
+    :columns="columns"
+    :rows="props.data"
+    :row-key="props.rowKey"
+    :rows-per-page-options="rowsPerPageOptions"
+    :pagination="{ rowsPerPage: props.initialRowsPerPage }"
+    v-bind="$attrs"
+  >
     <template v-slot:header="headerProps">
       <q-tr :props="headerProps">
         <q-th v-for="col in headerProps.cols" :key="col.name" :props="headerProps">
@@ -126,12 +133,14 @@ const props = withDefaults(
     updateRow?: (row: Row) => void
     addRow?: () => void
     deleteRow?: (row: Row) => void
+    initialRowsPerPage?: number
   }>(),
   {
     rowModel: () => z.object({}) as RowModel,
     data: () => [],
     headerClass: '',
     headerStyle: '',
+    initialRowsPerPage: 5,
   },
 )
 
