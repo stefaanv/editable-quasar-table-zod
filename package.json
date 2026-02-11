@@ -1,11 +1,24 @@
 {
-  "name": "editable-table-component",
+  "name": "@radon/editable-table-component",
   "version": "0.0.1",
   "description": "A Quasar Project",
   "productName": "Editable-table-component",
   "author": "Stefaan Vandevelde <stefaan.vandevelde.kortrijk@gmail.com>",
   "type": "module",
-  "private": true,
+  "private": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,ts,vue,css,html,md,json}\" --ignore-path .gitignore",

@@ -8,7 +8,7 @@
       bordered
       header-class="text-h6 bg-blue text-white"
       header-style="font-size: 1rem;"
-      :editable="false"
+      :editable="true"
       :editable-columns="['*']"
       :hide-columns="['id']"
       :column-labels="{
